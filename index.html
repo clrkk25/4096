@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>2048 - 4x4 区域轮换</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      background-color: #faf8ef;
+      margin: 0;
+      padding: 20px;
+    }
+    h1 {
+      color: #776e65;
+    }
+    #game-container {
+      width: 500px;
+      margin: 20px auto;
+      background-color: #bbada0;
+      border-radius: 6px;
+      padding: 10px;
+      position: relative;
+    }
+    #grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      grid-template-rows: repeat(5, 1fr);
+      gap: 10px;
+      width: 100%;
+      height: 500px;
+      box-sizing: border-box;
+    }
+    .cell {
+      width: 90px;
+      height: 90px;
+      background-color: #cdc1b4;
+      border-radius: 3px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 36px;
+      font-weight: bold;
+      color: #776e65;
+      position: relative;
+      box-sizing: border-box;
+      transition: all 0.1s ease;
+    }
+    .inactive {
+      background-color: #999 !important;
+      color: #ddd !important;
+      opacity: 0.8;
+    }
+    .active-border {
+      border: 3px solid #ff0000;
+    }
+    .tile-2 { background-color: #eee4da; }
+    .tile-4 { background-color: #ede0c8; }
+    .tile-8 { background-color: #f2b179; color: white; }
+    .tile-16 { background-color: #f59563; color: white; }
+    .tile-32 { background-color: #f67c5f; color: white; }
+    .tile-64 { background-color: #f65e3b; color: white; }
+    .tile-128 { background-color: #edcf72; color: white; font-size: 30px; }
+    .tile-256 { background-color: #edcc61; color: white; font-size: 30px; }
+    .tile-512 { background-color: #edc850; color: white; font-size: 30px; }
+    .tile-1024 { background-color: #edc53f; color: white; font-size: 26px; }
+    .tile-2048 { background-color: #edc22e; color: white; font-size: 26px; }
+    button {
+      margin-top: 10px;
+      padding: 10px 20px;
+      font-size: 16px;
+      background-color: #8f7a66;
+      color: white;
+      border: none;
+      border-radius: 3px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #9f8a76;
+    }
+    #score {
+      font-size: 20px;
+      color: #776e65;
+      margin-bottom: 10px;
+    }
+    #region-info {
+      font-size: 14px;
+      color: #776e65;
+      margin-top: 5px;
+    }
+  </style>
+</head>
+<body>
+  <h1>2048 - 4x4 区域轮换</h1>
+  <div id="score">得分: 0</div>
+  <div id="region-info">当前区域: 左上</div>
+  <div id="game-container">
+    <div id="grid"></div>
+  </div>
+  <button onclick="restartGame()">重新开始</button>
+  <script>
+    const GRID_SIZE = 5; // 改为 5x5
+    let grid = Array(GRID_SIZE).fill().map(() => Array(GRID_SIZE).fill(0));
+    let score = 0;
+    let currentRegionIndex = 0; // 0: 左上, 1: 右上, 2: 右下, 3: 左下
+    // 4x4 区域在 5x5 网格中的起始位置
+    const regions = [
+      { r: 0, c: 0, name: "左上" }, // top-left
+      { r: 0, c: 1, name: "右上" }, // top-right
+      { r: 1, c: 1, name: "右下" }, // bottom-right
+      { r: 1, c: 0, name: "左下" }  // bottom-left
+    ];
+    
+    function createGrid() {
+      const gridElement = document.getElementById("grid");
+      gridElement.innerHTML = "";
+      for (let r = 0; r < GRID_SIZE; r++) {
+        for (let c = 0; c < GRID_SIZE; c++) {
+          const cell = document.createElement("div");
+          cell.className = "cell";
+          cell.id = `cell-${r}-${c}`;
+          gridElement.appendChild(cell);
+        }
+      }
+    }
+    
+    function getActiveRegion() {
+      const { r, c } = regions[currentRegionIndex];
+      const cells = [];
+      for (let dr = 0; dr < 4; dr++) { // 改为 4x4
+        for (let dc = 0; dc < 4; dc++) { // 改为 4x4
+          cells.push({ r: r + dr, c: c + dc });
+        }
+      }
+      return cells;
+    }
+    
+    function isActiveCell(r, c) {
+      const region = getActiveRegion();
+      return region.some(cell => cell.r === r && cell.c === c);
+    }
+    
+    function updateView() {
+      for (let r = 0; r < GRID_SIZE; r++) {
+        for (let c = 0; c < GRID_SIZE; c++) {
+          const value = grid[r][c];
+          const cell = document.getElementById(`cell-${r}-${c}`);
+          cell.className = "cell";
+          if (!isActiveCell(r, c)) {
+            cell.classList.add("inactive");
+          } else if (r === regions[currentRegionIndex].r + 1 && c === regions[currentRegionIndex].c + 1) {
+            cell.classList.add("active-border");
+          }
+          if (value !== 0) {
+            const className = `tile-${Math.min(value, 2048)}`;
+            cell.classList.add(className);
+            cell.textContent = value;
+          } else {
+            cell.textContent = "";
+          }
+        }
+      }
+      document.getElementById("score").textContent = `得分: ${score}`;
+      document.getElementById("region-info").textContent = `当前区域: ${regions[currentRegionIndex].name}`;
+    }
+    
+    function addRandomTile() {
+      const activeCells = getActiveRegion().filter(({ r, c }) => grid[r][c] === 0);
+      if (activeCells.length > 0) {
+        const { r, c } = activeCells[Math.floor(Math.random() * activeCells.length)];
+        grid[r][c] = Math.random() < 0.9 ? 2 : 4;
+      }
+    }
+    
+    // --- 移动函数改为 4x4 区域 ---
+    function moveLeftInRegion() {
+      const { r: startR, c: startC } = regions[currentRegionIndex];
+      let moved = false;
+      for (let dr = 0; dr < 4; dr++) { // 改为 4 行
+        const row = [
+          grid[startR+dr][startC], 
+          grid[startR+dr][startC+1], 
+          grid[startR+dr][startC+2],
+          grid[startR+dr][startC+3]  // 添加第 4 个元素
+        ];
+        const filtered = row.filter(val => val !== 0);
+        for (let i = 0; i < filtered.length - 1; i++) {
+          if (filtered[i] === filtered[i + 1]) {
+            filtered[i] *= 2;
+            score += filtered[i];
+            filtered[i + 1] = 0;
+            moved = true;
+          }
+        }
+        const newRow = filtered.filter(val => val !== 0);
+        while (newRow.length < 4) newRow.push(0); // 补齐到 4 个
+        for (let dc = 0; dc < 4; dc++) { // 循环 4 次
+          if (grid[startR + dr][startC + dc] !== newRow[dc]) moved = true;
+          grid[startR + dr][startC + dc] = newRow[dc];
+        }
+      }
+      return moved;
+    }
+    
+    function moveRightInRegion() {
+      const { r: startR, c: startC } = regions[currentRegionIndex];
+      let moved = false;
+      for (let dr = 0; dr < 4; dr++) {
+        const row = [
+          grid[startR+dr][startC], 
+          grid[startR+dr][startC+1], 
+          grid[startR+dr][startC+2],
+          grid[startR+dr][startC+3]
+        ];
+        const filtered = row.filter(val => val !== 0);
+        for (let i = filtered.length - 2; i >= 0; i--) {
+          if (filtered[i] === filtered[i + 1]) {
+            filtered[i + 1] *= 2;
+            score += filtered[i + 1];
+            filtered[i] = 0;
+            moved = true;
+          }
+        }
+        const newRow = filtered.filter(val => val !== 0);
+        while (newRow.length < 4) newRow.unshift(0); // 补齐到 4 个
+        for (let dc = 0; dc < 4; dc++) {
+          if (grid[startR + dr][startC + dc] !== newRow[dc]) moved = true;
+          grid[startR + dr][startC + dc] = newRow[dc];
+        }
+      }
+      return moved;
+    }
+    
+    function moveUpInRegion() {
+      const { r: startR, c: startC } = regions[currentRegionIndex];
+      let moved = false;
+      for (let dc = 0; dc < 4; dc++) { // 改为 4 列
+        const col = [
+          grid[startR][startC+dc], 
+          grid[startR+1][startC+dc], 
+          grid[startR+2][startC+dc],
+          grid[startR+3][startC+dc]  // 添加第 4 个元素
+        ];
+        const filtered = col.filter(val => val !== 0);
+        for (let i = 0; i < filtered.length - 1; i++) {
+          if (filtered[i] === filtered[i + 1]) {
+            filtered[i] *= 2;
+            score += filtered[i];
+            filtered[i + 1] = 0;
+            moved = true;
+          }
+        }
+        const newCol = filtered.filter(val => val !== 0);
+        while (newCol.length < 4) newCol.push(0); // 补齐到 4 个
+        for (let dr = 0; dr < 4; dr++) { // 循环 4 次
+          if (grid[startR + dr][startC + dc] !== newCol[dr]) moved = true;
+          grid[startR + dr][startC + dc] = newCol[dr];
+        }
+      }
+      return moved;
+    }
+    
+    function moveDownInRegion() {
+      const { r: startR, c: startC } = regions[currentRegionIndex];
+      let moved = false;
+      for (let dc = 0; dc < 4; dc++) {
+        const col = [
+          grid[startR][startC+dc], 
+          grid[startR+1][startC+dc], 
+          grid[startR+2][startC+dc],
+          grid[startR+3][startC+dc]
+        ];
+        const filtered = col.filter(val => val !== 0);
+        for (let i = filtered.length - 2; i >= 0; i--) {
+          if (filtered[i] === filtered[i + 1]) {
+            filtered[i + 1] *= 2;
+            score += filtered[i + 1];
+            filtered[i] = 0;
+            moved = true;
+          }
+        }
+        const newCol = filtered.filter(val => val !== 0);
+        while (newCol.length < 4) newCol.unshift(0); // 补齐到 4 个
+        for (let dr = 0; dr < 4; dr++) {
+          if (grid[startR + dr][startC + dc] !== newCol[dr]) moved = true;
+          grid[startR + dr][startC + dc] = newCol[dr];
+        }
+      }
+      return moved;
+    }
+    // --- 移动函数结束 ---
+    
+    function nextRegion() {
+      currentRegionIndex = (currentRegionIndex + 1) % 4;
+    }
+    
+    // ✅ 修改：游戏结束判断仅针对当前 4x4 区域
+    function isGameOver() {
+      const { r: startR, c: startC } = regions[currentRegionIndex];
+      // 检查当前 4x4 区域内是否有空格
+      for (let dr = 0; dr < 4; dr++) { // 改为 4
+        for (let dc = 0; dc < 4; dc++) { // 改为 4
+          if (grid[startR + dr][startC + dc] === 0) return false;
+        }
+      }
+      // 检查当前 4x4 区域内是否有可合并的相邻格子
+      for (let dr = 0; dr < 4; dr++) { // 改为 4
+        for (let dc = 0; dc < 4; dc++) { // 改为 4
+          const val = grid[startR + dr][startC + dc];
+          // 检查下方（在区域内）
+          if (dr < 3 && grid[startR + dr + 1][startC + dc] === val) return false; // 改为 dr < 3
+          // 检查右方（在区域内）
+          if (dc < 3 && grid[startR + dr][startC + dc + 1] === val) return false; // 改为 dc < 3
+        }
+      }
+      return true; // 当前区域无法移动
+    }
+    
+    function handleKeyDown(e) {
+      const key = e.key;
+      if (!["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"].includes(key)) return;
+      e.preventDefault();
+      let moved = false;
+      switch (key) {
+        case "ArrowLeft": moved = moveLeftInRegion(); break;
+        case "ArrowRight": moved = moveRightInRegion(); break;
+        case "ArrowUp": moved = moveUpInRegion(); break;
+        case "ArrowDown": moved = moveDownInRegion(); break;
+      }
+      if (moved) {
+        // ✅ 修改：先切换到下一个区域，再添加新方块
+        nextRegion();
+        addRandomTile();
+        updateView();
+        if (isGameOver()) {
+          setTimeout(() => {
+            alert("当前4x4区域已满且无法合并！游戏结束！\n你的得分是: " + score);
+          }, 150);
+        }
+      }
+    }
+    
+    function restartGame() {
+      grid = Array(GRID_SIZE).fill().map(() => Array(GRID_SIZE).fill(0));
+      score = 0;
+      currentRegionIndex = 0;
+      addRandomTile();
+      addRandomTile();
+      updateView();
+    }
+    
+    // 初始化
+    window.addEventListener("keydown", handleKeyDown);
+    createGrid();
+    restartGame();
+  </script>
+</body>
+</html>
