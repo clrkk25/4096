@@ -2,7 +2,7 @@
 <html lang="zh">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
   <title>2048 - 4x4 区域轮换</title>
   <style>
     body {
@@ -10,42 +10,45 @@
       text-align: center;
       background-color: #faf8ef;
       margin: 0;
-      padding: 20px;
+      padding: 20px 5px;
+      box-sizing: border-box;
     }
     h1 {
       color: #776e65;
+      margin: 0 0 15px 0;
+      font-size: 2.5em;
     }
     #game-container {
-      width: 500px;
-      margin: 20px auto;
+      width: 90vw;
+      max-width: 500px;
+      margin: 0 auto;
       background-color: #bbada0;
       border-radius: 6px;
-      padding: 10px;
+      padding: 2vw;
       position: relative;
+      box-sizing: border-box;
     }
     #grid {
       display: grid;
       grid-template-columns: repeat(5, 1fr);
       grid-template-rows: repeat(5, 1fr);
-      gap: 10px;
+      gap: 2vw;
       width: 100%;
-      height: 500px;
+      aspect-ratio: 1/1; /* 保持正方形比例 */
       box-sizing: border-box;
     }
     .cell {
-      width: 90px;
-      height: 90px;
       background-color: #cdc1b4;
       border-radius: 3px;
       display: flex;
       justify-content: center;
       align-items: center;
-      font-size: 36px;
       font-weight: bold;
       color: #776e65;
       position: relative;
       box-sizing: border-box;
       transition: all 0.1s ease;
+      font-size: min(7vw, 36px); /* 响应式字体大小 */
     }
     .inactive {
       background-color: #999 !important;
@@ -61,14 +64,14 @@
     .tile-16 { background-color: #f59563; color: white; }
     .tile-32 { background-color: #f67c5f; color: white; }
     .tile-64 { background-color: #f65e3b; color: white; }
-    .tile-128 { background-color: #edcf72; color: white; font-size: 30px; }
-    .tile-256 { background-color: #edcc61; color: white; font-size: 30px; }
-    .tile-512 { background-color: #edc850; color: white; font-size: 30px; }
-    .tile-1024 { background-color: #edc53f; color: white; font-size: 26px; }
-    .tile-2048 { background-color: #edc22e; color: white; font-size: 26px; }
+    .tile-128 { background-color: #edcf72; color: white; font-size: min(6vw, 30px); }
+    .tile-256 { background-color: #edcc61; color: white; font-size: min(6vw, 30px); }
+    .tile-512 { background-color: #edc850; color: white; font-size: min(6vw, 30px); }
+    .tile-1024 { background-color: #edc53f; color: white; font-size: min(5vw, 26px); }
+    .tile-2048 { background-color: #edc22e; color: white; font-size: min(5vw, 26px); }
     button {
-      margin-top: 10px;
-      padding: 10px 20px;
+      margin-top: 15px;
+      padding: 12px 24px;
       font-size: 16px;
       background-color: #8f7a66;
       color: white;
@@ -80,14 +83,26 @@
       background-color: #9f8a76;
     }
     #score {
-      font-size: 20px;
+      font-size: 1.2em;
       color: #776e65;
       margin-bottom: 10px;
     }
     #region-info {
-      font-size: 14px;
+      font-size: 1em;
       color: #776e65;
       margin-top: 5px;
+      margin-bottom: 15px;
+    }
+
+    /* 确保在极小屏幕上也能正常显示 */
+    @media (max-width: 320px) {
+      h1 {
+        font-size: 2em;
+      }
+      button {
+        padding: 10px 20px;
+        font-size: 14px;
+      }
     }
   </style>
 </head>
@@ -100,7 +115,7 @@
   </div>
   <button onclick="restartGame()">重新开始</button>
   <script>
-    const GRID_SIZE = 5; // 改为 5x5
+    const GRID_SIZE = 5; // 5x5 网格
     let grid = Array(GRID_SIZE).fill().map(() => Array(GRID_SIZE).fill(0));
     let score = 0;
     let currentRegionIndex = 0; // 0: 左上, 1: 右上, 2: 右下, 3: 左下
@@ -128,8 +143,8 @@
     function getActiveRegion() {
       const { r, c } = regions[currentRegionIndex];
       const cells = [];
-      for (let dr = 0; dr < 4; dr++) { // 改为 4x4
-        for (let dc = 0; dc < 4; dc++) { // 改为 4x4
+      for (let dr = 0; dr < 4; dr++) {
+        for (let dc = 0; dc < 4; dc++) {
           cells.push({ r: r + dr, c: c + dc });
         }
       }
@@ -173,16 +188,16 @@
       }
     }
     
-    // --- 移动函数改为 4x4 区域 ---
+    // 移动函数 - 4x4 区域
     function moveLeftInRegion() {
       const { r: startR, c: startC } = regions[currentRegionIndex];
       let moved = false;
-      for (let dr = 0; dr < 4; dr++) { // 改为 4 行
+      for (let dr = 0; dr < 4; dr++) {
         const row = [
           grid[startR+dr][startC], 
           grid[startR+dr][startC+1], 
           grid[startR+dr][startC+2],
-          grid[startR+dr][startC+3]  // 添加第 4 个元素
+          grid[startR+dr][startC+3]
         ];
         const filtered = row.filter(val => val !== 0);
         for (let i = 0; i < filtered.length - 1; i++) {
@@ -194,8 +209,8 @@
           }
         }
         const newRow = filtered.filter(val => val !== 0);
-        while (newRow.length < 4) newRow.push(0); // 补齐到 4 个
-        for (let dc = 0; dc < 4; dc++) { // 循环 4 次
+        while (newRow.length < 4) newRow.push(0);
+        for (let dc = 0; dc < 4; dc++) {
           if (grid[startR + dr][startC + dc] !== newRow[dc]) moved = true;
           grid[startR + dr][startC + dc] = newRow[dc];
         }
@@ -223,7 +238,7 @@
           }
         }
         const newRow = filtered.filter(val => val !== 0);
-        while (newRow.length < 4) newRow.unshift(0); // 补齐到 4 个
+        while (newRow.length < 4) newRow.unshift(0);
         for (let dc = 0; dc < 4; dc++) {
           if (grid[startR + dr][startC + dc] !== newRow[dc]) moved = true;
           grid[startR + dr][startC + dc] = newRow[dc];
@@ -235,12 +250,12 @@
     function moveUpInRegion() {
       const { r: startR, c: startC } = regions[currentRegionIndex];
       let moved = false;
-      for (let dc = 0; dc < 4; dc++) { // 改为 4 列
+      for (let dc = 0; dc < 4; dc++) {
         const col = [
           grid[startR][startC+dc], 
           grid[startR+1][startC+dc], 
           grid[startR+2][startC+dc],
-          grid[startR+3][startC+dc]  // 添加第 4 个元素
+          grid[startR+3][startC+dc]
         ];
         const filtered = col.filter(val => val !== 0);
         for (let i = 0; i < filtered.length - 1; i++) {
@@ -252,8 +267,8 @@
           }
         }
         const newCol = filtered.filter(val => val !== 0);
-        while (newCol.length < 4) newCol.push(0); // 补齐到 4 个
-        for (let dr = 0; dr < 4; dr++) { // 循环 4 次
+        while (newCol.length < 4) newCol.push(0);
+        for (let dr = 0; dr < 4; dr++) {
           if (grid[startR + dr][startC + dc] !== newCol[dr]) moved = true;
           grid[startR + dr][startC + dc] = newCol[dr];
         }
@@ -281,7 +296,7 @@
           }
         }
         const newCol = filtered.filter(val => val !== 0);
-        while (newCol.length < 4) newCol.unshift(0); // 补齐到 4 个
+        while (newCol.length < 4) newCol.unshift(0);
         for (let dr = 0; dr < 4; dr++) {
           if (grid[startR + dr][startC + dc] !== newCol[dr]) moved = true;
           grid[startR + dr][startC + dc] = newCol[dr];
@@ -289,29 +304,27 @@
       }
       return moved;
     }
-    // --- 移动函数结束 ---
     
     function nextRegion() {
       currentRegionIndex = (currentRegionIndex + 1) % 4;
     }
     
-    // ✅ 修改：游戏结束判断仅针对当前 4x4 区域
     function isGameOver() {
       const { r: startR, c: startC } = regions[currentRegionIndex];
       // 检查当前 4x4 区域内是否有空格
-      for (let dr = 0; dr < 4; dr++) { // 改为 4
-        for (let dc = 0; dc < 4; dc++) { // 改为 4
+      for (let dr = 0; dr < 4; dr++) {
+        for (let dc = 0; dc < 4; dc++) {
           if (grid[startR + dr][startC + dc] === 0) return false;
         }
       }
       // 检查当前 4x4 区域内是否有可合并的相邻格子
-      for (let dr = 0; dr < 4; dr++) { // 改为 4
-        for (let dc = 0; dc < 4; dc++) { // 改为 4
+      for (let dr = 0; dr < 4; dr++) {
+        for (let dc = 0; dc < 4; dc++) {
           const val = grid[startR + dr][startC + dc];
           // 检查下方（在区域内）
-          if (dr < 3 && grid[startR + dr + 1][startC + dc] === val) return false; // 改为 dr < 3
+          if (dr < 3 && grid[startR + dr + 1][startC + dc] === val) return false;
           // 检查右方（在区域内）
-          if (dc < 3 && grid[startR + dr][startC + dc + 1] === val) return false; // 改为 dc < 3
+          if (dc < 3 && grid[startR + dr][startC + dc + 1] === val) return false;
         }
       }
       return true; // 当前区域无法移动
@@ -329,7 +342,66 @@
         case "ArrowDown": moved = moveDownInRegion(); break;
       }
       if (moved) {
-        // ✅ 修改：先切换到下一个区域，再添加新方块
+        nextRegion();
+        addRandomTile();
+        updateView();
+        if (isGameOver()) {
+          setTimeout(() => {
+            alert("当前4x4区域已满且无法合并！游戏结束！\n你的得分是: " + score);
+          }, 150);
+        }
+      }
+    }
+    
+    // 添加触摸滑动支持
+    let touchStartX = 0;
+    let touchStartY = 0;
+    
+    function handleTouchStart(e) {
+      touchStartX = e.touches[0].clientX;
+      touchStartY = e.touches[0].clientY;
+    }
+    
+    function handleTouchMove(e) {
+      e.preventDefault(); // 防止页面滚动
+    }
+    
+    function handleTouchEnd(e) {
+      if (!touchStartX || !touchStartY) return;
+      
+      const touchEndX = e.changedTouches[0].clientX;
+      const touchEndY = e.changedTouches[0].clientY;
+      
+      const diffX = touchEndX - touchStartX;
+      const diffY = touchEndY - touchStartY;
+      
+      // 确定滑动方向（优先考虑滑动距离更长的方向）
+      if (Math.abs(diffX) > Math.abs(diffY)) {
+        // 水平滑动
+        if (Math.abs(diffX) > 30) { // 最小滑动距离阈值
+          if (diffX > 0) {
+            moveRightInRegion();
+          } else {
+            moveLeftInRegion();
+          }
+        }
+      } else {
+        // 垂直滑动
+        if (Math.abs(diffY) > 30) { // 最小滑动距离阈值
+          if (diffY > 0) {
+            moveDownInRegion();
+          } else {
+            moveUpInRegion();
+          }
+        }
+      }
+      
+      // 重置触摸起始位置
+      touchStartX = 0;
+      touchStartY = 0;
+      
+      // 检查是否有移动并更新游戏状态
+      if (moved) {
         nextRegion();
         addRandomTile();
         updateView();
@@ -350,8 +422,17 @@
       updateView();
     }
     
-    // 初始化
+    // 初始化事件监听
     window.addEventListener("keydown", handleKeyDown);
+    document.addEventListener("touchstart", handleTouchStart, false);
+    document.addEventListener("touchmove", handleTouchMove, false);
+    document.addEventListener("touchend", handleTouchEnd, false);
+    
+    // 防止移动端双击缩放
+    document.addEventListener('dblclick', function(e) {
+      e.preventDefault();
+    }, { passive: false });
+    
     createGrid();
     restartGame();
   </script>
