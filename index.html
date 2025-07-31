@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
   <title>2048 - 4x4 区域轮换</title>
   <style>
-    /* 原有样式保持不变 */
     body {
       font-family: Arial, sans-serif;
       text-align: center;
@@ -13,7 +12,6 @@
       margin: 0;
       padding: 20px 5px;
       box-sizing: border-box;
-      touch-action: manipulation; /* 优化触摸响应 */
     }
     h1 {
       color: #776e65;
@@ -29,7 +27,6 @@
       padding: 2vw;
       position: relative;
       box-sizing: border-box;
-      touch-action: none; /* 禁用浏览器默认触摸行为 */
     }
     #grid {
       display: grid;
@@ -37,7 +34,7 @@
       grid-template-rows: repeat(5, 1fr);
       gap: 2vw;
       width: 100%;
-      aspect-ratio: 1/1; /* 保持正方形比例 */
+      aspect-ratio: 1/1;
       box-sizing: border-box;
     }
     .cell {
@@ -51,8 +48,7 @@
       position: relative;
       box-sizing: border-box;
       transition: all 0.1s ease;
-      font-size: min(7vw, 36px); /* 响应式字体大小 */
-      user-select: none; /* 防止文本被选中 */
+      font-size: min(7vw, 36px);
     }
     .inactive {
       background-color: #999 !important;
@@ -82,7 +78,6 @@
       border: none;
       border-radius: 3px;
       cursor: pointer;
-      user-select: none; /* 防止按钮文本被选中 */
     }
     button:hover {
       background-color: #9f8a76;
@@ -91,17 +86,13 @@
       font-size: 1.2em;
       color: #776e65;
       margin-bottom: 10px;
-      user-select: none;
     }
     #region-info {
       font-size: 1em;
       color: #776e65;
       margin-top: 5px;
       margin-bottom: 15px;
-      user-select: none;
     }
-
-    /* 确保在极小屏幕上也能正常显示 */
     @media (max-width: 320px) {
       h1 {
         font-size: 2em;
@@ -114,9 +105,6 @@
   </style>
 </head>
 <body>
-  <!-- 添加背景音乐元素 -->
-  <audio src="不说.mp3" loop autoplay muted id="bgm"></audio>
-  
   <h1>2048 - 4x4 区域轮换</h1>
   <div id="score">得分: 0</div>
   <div id="region-info">当前区域: 左上</div>
@@ -124,34 +112,26 @@
     <div id="grid"></div>
   </div>
   <button onclick="restartGame()">重新开始</button>
-  <script>
-    // 初始化背景音乐（处理浏览器自动播放限制）
-    const bgm = document.getElementById('bgm');
-    
-    // 尝试在用户交互后启用声音（解决浏览器自动播放限制）
-    function enableAudio() {
-      bgm.muted = false;
-      bgm.volume = 0.5; // 设置音量为50%
-      document.removeEventListener('click', enableAudio);
-      document.removeEventListener('touchstart', enableAudio);
-    }
-    
-    // 监听用户首次交互以启用音频
-    document.addEventListener('click', enableAudio);
-    document.addEventListener('touchstart', enableAudio);
 
-    const GRID_SIZE = 5; // 5x5 网格
+  <!-- 背景音乐 -->
+  <audio id="background-music" loop>
+    <source src="不说.mp3" type="audio/mpeg">
+    您的浏览器不支持音频播放。
+  </audio>
+
+  <script>
+    const GRID_SIZE = 5;
     let grid = Array(GRID_SIZE).fill().map(() => Array(GRID_SIZE).fill(0));
     let score = 0;
-    let currentRegionIndex = 0; // 0: 左上, 1: 右上, 2: 右下, 3: 左下
-    // 4x4 区域在 5x5 网格中的起始位置
+    let currentRegionIndex = 0;
+
     const regions = [
-      { r: 0, c: 0, name: "左上" }, // top-left
-      { r: 0, c: 1, name: "右上" }, // top-right
-      { r: 1, c: 1, name: "右下" }, // bottom-right
-      { r: 1, c: 0, name: "左下" }  // bottom-left
+      { r: 0, c: 0, name: "左上" },
+      { r: 0, c: 1, name: "右上" },
+      { r: 1, c: 1, name: "右下" },
+      { r: 1, c: 0, name: "左下" }
     ];
-    
+
     function createGrid() {
       const gridElement = document.getElementById("grid");
       gridElement.innerHTML = "";
@@ -164,7 +144,7 @@
         }
       }
     }
-    
+
     function getActiveRegion() {
       const { r, c } = regions[currentRegionIndex];
       const cells = [];
@@ -175,12 +155,12 @@
       }
       return cells;
     }
-    
+
     function isActiveCell(r, c) {
       const region = getActiveRegion();
       return region.some(cell => cell.r === r && cell.c === c);
     }
-    
+
     function updateView() {
       for (let r = 0; r < GRID_SIZE; r++) {
         for (let c = 0; c < GRID_SIZE; c++) {
@@ -204,7 +184,7 @@
       document.getElementById("score").textContent = `得分: ${score}`;
       document.getElementById("region-info").textContent = `当前区域: ${regions[currentRegionIndex].name}`;
     }
-    
+
     function addRandomTile() {
       const activeCells = getActiveRegion().filter(({ r, c }) => grid[r][c] === 0);
       if (activeCells.length > 0) {
@@ -212,8 +192,7 @@
         grid[r][c] = Math.random() < 0.9 ? 2 : 4;
       }
     }
-    
-    // 移动函数 - 4x4 区域
+
     function moveLeftInRegion() {
       const { r: startR, c: startC } = regions[currentRegionIndex];
       let moved = false;
@@ -242,7 +221,7 @@
       }
       return moved;
     }
-    
+
     function moveRightInRegion() {
       const { r: startR, c: startC } = regions[currentRegionIndex];
       let moved = false;
@@ -271,7 +250,7 @@
       }
       return moved;
     }
-    
+
     function moveUpInRegion() {
       const { r: startR, c: startC } = regions[currentRegionIndex];
       let moved = false;
@@ -300,7 +279,7 @@
       }
       return moved;
     }
-    
+
     function moveDownInRegion() {
       const { r: startR, c: startC } = regions[currentRegionIndex];
       let moved = false;
@@ -329,32 +308,29 @@
       }
       return moved;
     }
-    
+
     function nextRegion() {
       currentRegionIndex = (currentRegionIndex + 1) % 4;
     }
-    
+
     function isGameOver() {
       const { r: startR, c: startC } = regions[currentRegionIndex];
-      // 检查当前 4x4 区域内是否有空格
       for (let dr = 0; dr < 4; dr++) {
         for (let dc = 0; dc < 4; dc++) {
           if (grid[startR + dr][startC + dc] === 0) return false;
         }
       }
-      // 检查当前 4x4 区域内是否有可合并的相邻格子
       for (let dr = 0; dr < 4; dr++) {
         for (let dc = 0; dc < 4; dc++) {
           const val = grid[startR + dr][startC + dc];
-          // 检查下方（在区域内）
           if (dr < 3 && grid[startR + dr + 1][startC + dc] === val) return false;
-          // 检查右方（在区域内）
           if (dc < 3 && grid[startR + dr][startC + dc + 1] === val) return false;
         }
       }
-      return true; // 当前区域无法移动
+      return true;
     }
-    
+
+    // 键盘控制
     function handleKeyDown(e) {
       const key = e.key;
       if (!["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"].includes(key)) return;
@@ -377,83 +353,64 @@
         }
       }
     }
-    
-    // 添加触摸滑动支持
+
+    // 触摸控制
     let touchStartX = 0;
     let touchStartY = 0;
-    let touchEndX = 0;
-    let touchEndY = 0;
-    
+
     function handleTouchStart(e) {
-      e.preventDefault();
       touchStartX = e.touches[0].clientX;
       touchStartY = e.touches[0].clientY;
     }
-    
+
     function handleTouchMove(e) {
-      e.preventDefault(); // 防止页面滚动
-    }
-    
-    function handleTouchEnd(e) {
       e.preventDefault();
+    }
+
+    function handleTouchEnd(e) {
       if (!touchStartX || !touchStartY) return;
-      
-      touchEndX = e.changedTouches[0].clientX;
-      touchEndY = e.changedTouches[0].clientY;
-      
+
+      const touchEndX = e.changedTouches[0].clientX;
+      const touchEndY = e.changedTouches[0].clientY;
       const diffX = touchEndX - touchStartX;
       const diffY = touchEndY - touchStartY;
-      
-      // 确定滑动方向（优先考虑滑动距离更长的方向）
+
+      let moved = false;
+
       if (Math.abs(diffX) > Math.abs(diffY)) {
-        // 水平滑动
-        if (Math.abs(diffX) > 30) { // 最小滑动距离阈值
-          let moved = false;
+        if (Math.abs(diffX) > 30) {
           if (diffX > 0) {
             moved = moveRightInRegion();
           } else {
             moved = moveLeftInRegion();
           }
-          if (moved) {
-            nextRegion();
-            addRandomTile();
-            updateView();
-            if (isGameOver()) {
-              setTimeout(() => {
-                alert("当前4x4区域已满且无法合并！游戏结束！\n你的得分是: " + score);
-              }, 150);
-            }
-          }
         }
       } else {
-        // 垂直滑动
-        if (Math.abs(diffY) > 30) { // 最小滑动距离阈值
-          let moved = false;
+        if (Math.abs(diffY) > 30) {
           if (diffY > 0) {
             moved = moveDownInRegion();
           } else {
             moved = moveUpInRegion();
           }
-          if (moved) {
-            nextRegion();
-            addRandomTile();
-            updateView();
-            if (isGameOver()) {
-              setTimeout(() => {
-                alert("当前4x4区域已满且无法合并！游戏结束！\n你的得分是: " + score);
-              }, 150);
-            }
-          }
         }
       }
-      
-      // 重置触摸起始位置
+
       touchStartX = 0;
       touchStartY = 0;
-      touchEndX = 0;
-      touchEndY = 0;
+
+      if (moved) {
+        nextRegion();
+        addRandomTile();
+        updateView();
+        if (isGameOver()) {
+          setTimeout(() => {
+            alert("当前4x4区域已满且无法合并！游戏结束！\n你的得分是: " + score);
+          }, 150);
+        }
+      }
     }
-    
+
+    // 重启游戏并播放音乐
     function restartGame() {
       grid = Array(GRID_SIZE).fill().map(() => Array(GRID_SIZE).fill(0));
       score = 0;
@@ -461,19 +418,34 @@
       addRandomTile();
       addRandomTile();
       updateView();
+
+      // 播放背景音乐
+      const music = document.getElementById('background-music');
+      const playPromise = music.play();
+      if (playPromise !== undefined) {
+        playPromise.then(() => {
+          console.log('背景音乐已播放');
+        }).catch(error => {
+          console.warn('音频播放被阻止:', error);
+          // 提示用户点击一次开启音乐
+          alert('点击屏幕任意位置开启背景音乐');
+          document.body.addEventListener('click', function enableMusic() {
+            music.play().then(() => console.log('音乐已开启')).catch(() => {});
+            document.body.removeEventListener('click', enableMusic);
+          }, { once: true });
+        });
+      }
     }
-    
-    // 初始化事件监听
+
+    // 初始化
     window.addEventListener("keydown", handleKeyDown);
-    document.getElementById("game-container").addEventListener("touchstart", handleTouchStart, { passive: false });
-    document.getElementById("game-container").addEventListener("touchmove", handleTouchMove, { passive: false });
-    document.getElementById("game-container").addEventListener("touchend", handleTouchEnd, { passive: false });
-    
-    // 防止移动端双击缩放
+    document.addEventListener("touchstart", handleTouchStart, { passive: true });
+    document.addEventListener("touchmove", handleTouchMove, { passive: false });
+    document.addEventListener("touchend", handleTouchEnd, { passive: true });
     document.addEventListener('dblclick', function(e) {
       e.preventDefault();
     }, { passive: false });
-    
+
     createGrid();
     restartGame();
   </script>
