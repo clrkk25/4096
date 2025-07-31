@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
   <title>2048 - 4x4 区域轮换</title>
   <style>
+    /* 原有样式保持不变 */
     body {
       font-family: Arial, sans-serif;
       text-align: center;
@@ -113,6 +114,9 @@
   </style>
 </head>
 <body>
+  <!-- 添加背景音乐元素 -->
+  <audio src="不说.mp3" loop autoplay muted id="bgm"></audio>
+  
   <h1>2048 - 4x4 区域轮换</h1>
   <div id="score">得分: 0</div>
   <div id="region-info">当前区域: 左上</div>
@@ -121,6 +125,21 @@
   </div>
   <button onclick="restartGame()">重新开始</button>
   <script>
+    // 初始化背景音乐（处理浏览器自动播放限制）
+    const bgm = document.getElementById('bgm');
+    
+    // 尝试在用户交互后启用声音（解决浏览器自动播放限制）
+    function enableAudio() {
+      bgm.muted = false;
+      bgm.volume = 0.5; // 设置音量为50%
+      document.removeEventListener('click', enableAudio);
+      document.removeEventListener('touchstart', enableAudio);
+    }
+    
+    // 监听用户首次交互以启用音频
+    document.addEventListener('click', enableAudio);
+    document.addEventListener('touchstart', enableAudio);
+
     const GRID_SIZE = 5; // 5x5 网格
     let grid = Array(GRID_SIZE).fill().map(() => Array(GRID_SIZE).fill(0));
     let score = 0;
