@@ -69,8 +69,13 @@
     .tile-512 { background-color: #edc850; color: white; font-size: min(6vw, 30px); }
     .tile-1024 { background-color: #edc53f; color: white; font-size: min(5vw, 26px); }
     .tile-2048 { background-color: #edc22e; color: white; font-size: min(5vw, 26px); }
-    button {
+    .button-container {
       margin-top: 15px;
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+    }
+    button {
       padding: 12px 24px;
       font-size: 16px;
       background-color: #8f7a66;
@@ -101,6 +106,13 @@
         padding: 10px 20px;
         font-size: 14px;
       }
+      .button-container {
+        flex-direction: column;
+        align-items: center;
+      }
+      button {
+        width: 80%;
+      }
     }
   </style>
 </head>
@@ -111,7 +123,10 @@
   <div id="game-container">
     <div id="grid"></div>
   </div>
-  <button onclick="restartGame()">重新开始</button>
+  <div class="button-container">
+    <button onclick="restartGame()">重新开始</button>
+    <button onclick="toggleMusic()">关闭音乐</button>
+  </div>
 
   <!-- 背景音乐 -->
   <audio id="background-music" loop>
@@ -124,6 +139,7 @@
     let grid = Array(GRID_SIZE).fill().map(() => Array(GRID_SIZE).fill(0));
     let score = 0;
     let currentRegionIndex = 0;
+    let musicPlaying = false;
 
     const regions = [
       { r: 0, c: 0, name: "左上" },
@@ -410,7 +426,31 @@
       }
     }
 
-    // 重启游戏并播放音乐
+    // 音乐控制
+    function toggleMusic() {
+      const music = document.getElementById('background-music');
+      const musicButton = document.querySelector('button[onclick="toggleMusic()"]');
+      
+      if (musicPlaying) {
+        music.pause();
+        musicPlaying = false;
+        musicButton.textContent = "播放音乐";
+      } else {
+        const playPromise = music.play();
+        if (playPromise !== undefined) {
+          playPromise.then(() => {
+            musicPlaying = true;
+            musicButton.textContent = "关闭音乐";
+            console.log('背景音乐已播放');
+          }).catch(error => {
+            console.warn('音频播放被阻止:', error);
+            alert('请允许音频播放权限');
+          });
+        }
+      }
+    }
+
+    // 重启游戏
     function restartGame() {
       grid = Array(GRID_SIZE).fill().map(() => Array(GRID_SIZE).fill(0));
       score = 0;
@@ -419,20 +459,20 @@
       addRandomTile();
       updateView();
 
-      // 播放背景音乐
+      // 尝试播放背景音乐
       const music = document.getElementById('background-music');
+      const musicButton = document.querySelector('button[onclick="toggleMusic()"]');
+      
       const playPromise = music.play();
       if (playPromise !== undefined) {
         playPromise.then(() => {
+          musicPlaying = true;
+          musicButton.textContent = "关闭音乐";
           console.log('背景音乐已播放');
         }).catch(error => {
           console.warn('音频播放被阻止:', error);
-          // 提示用户点击一次开启音乐
-          alert('点击屏幕任意位置开启背景音乐');
-          document.body.addEventListener('click', function enableMusic() {
-            music.play().then(() => console.log('音乐已开启')).catch(() => {});
-            document.body.removeEventListener('click', enableMusic);
-          }, { once: true });
+          musicPlaying = false;
+          musicButton.textContent = "播放音乐";
         });
       }
     }
